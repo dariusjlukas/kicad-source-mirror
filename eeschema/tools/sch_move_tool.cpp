@@ -1295,6 +1295,12 @@ void SCH_MOVE_TOOL::initializeMoveOperation( const TOOL_EVENT& aEvent, SCH_SELEC
     // Set up the starting position and move/drag offset
     m_cursor = controls->GetCursorPosition();
 
+    // Whether we actually need to move the OS cursor. A no-op SetCursorPosition still
+    // calls into the platform warp, and on Wayland sessions (including XWayland, where
+    // the compositor only fakes the warp) it injects a phantom drag delta on the next
+    // real pointer motion. So only warp when m_cursor was changed below.
+    bool needCursorWarp = false;
+
     if( m_mode == BREAK && m_breakPos )
     {
         m_cursor = *m_breakPos;
@@ -1302,6 +1308,7 @@ void SCH_MOVE_TOOL::initializeMoveOperation( const TOOL_EVENT& aEvent, SCH_SELEC
         aSelection.SetReferencePoint( m_cursor );
         m_moveOffset = VECTOR2I( 0, 0 );
         m_breakPos.reset();
+        needCursorWarp = true;
     }
 
     if( aEvent.IsAction( &SCH_ACTIONS::restartMove ) )
@@ -1350,9 +1357,10 @@ void SCH_MOVE_TOOL::initializeMoveOperation( const TOOL_EVENT& aEvent, SCH_SELEC
     {
         if( m_frame->GetMoveWarpsCursor() )
         {
-            // User wants to warp the mouse
+            // User wants to warp the mouse to the drag-origin anchor
             m_cursor = grid.BestDragOrigin( m_cursor, aSnapLayer, aSelection );
             aSelection.SetReferencePoint( m_cursor );
+            needCursorWarp = true;
         }
         else
         {
@@ -1361,7 +1369,9 @@ void SCH_MOVE_TOOL::initializeMoveOperation( const TOOL_EVENT& aEvent, SCH_SELEC
         }
     }
 
-    controls->SetCursorPosition( m_cursor, false );
+    if( needCursorWarp )
+        controls->SetCursorPosition( m_cursor, false );
+
     controls->SetAutoPan( true );
     m_moveInProgress = true;
 }
