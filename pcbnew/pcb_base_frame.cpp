@@ -984,6 +984,26 @@ void PCB_BASE_FRAME::CommonSettingsChanged( int aFlags )
 }
 
 
+void PCB_BASE_FRAME::applyAppearanceModeToCanvas()
+{
+    if( !GetCanvas() )
+        return;
+
+    KIGFX::VIEW*         view = GetCanvas()->GetView();
+    KIGFX::PCB_PAINTER*  painter = static_cast<KIGFX::PCB_PAINTER*>( view->GetPainter() );
+    PCB_RENDER_SETTINGS* settings = painter->GetSettings();
+
+    settings->LoadColors( GetColorSettings( true ) );
+
+    view->UpdateAllItems( KIGFX::COLOR );
+    GetCanvas()->Refresh();
+
+    // 3D viewer is not in the KIWAY; nudge it directly.
+    if( EDA_3D_VIEWER_FRAME* viewer = Get3DViewerFrame() )
+        viewer->ApplyAppearanceMode();
+}
+
+
 void PCB_BASE_FRAME::OnModify()
 {
     EDA_BASE_FRAME::OnModify();

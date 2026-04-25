@@ -32,6 +32,7 @@
 #include "gal/cursors.h"
 #endif
 
+#include <settings/common_settings.h>
 #include <widgets/mathplot.h>
 #include <wx/graphics.h>
 #include <wx/image.h>
@@ -1419,14 +1420,29 @@ mpWindow::mpWindow( wxWindow* parent, wxWindowID id ) :
     m_popmenu.Append( mpID_FIT, _( "Fit on Screen" ), _( "Set plot view to show all items" ) );
 
     m_layers.clear();
-    SetBackgroundColour( *wxWHITE );
-    m_bgColour  = *wxWHITE;
-    m_fgColour  = *wxBLACK;
+
+    {
+        const bool dark = COMMON_SETTINGS::APPEARANCE::IsEffectiveDark();
+        m_bgColour = dark ? wxColour( 30, 33, 38 )    : *wxWHITE;
+        m_fgColour = dark ? wxColour( 220, 220, 220 ) : *wxBLACK;
+        SetBackgroundColour( m_bgColour );
+    }
 
     SetSizeHints( 128, 128 );
 
     // J.L.Blanco: Eliminates the "flick" with the double buffer.
     SetBackgroundStyle( wxBG_STYLE_CUSTOM );
+
+    Bind( wxEVT_SYS_COLOUR_CHANGED,
+            [this]( wxSysColourChangedEvent& aEvent )
+            {
+                const bool dark = COMMON_SETTINGS::APPEARANCE::IsEffectiveDark();
+                m_bgColour = dark ? wxColour( 30, 33, 38 )    : *wxWHITE;
+                m_fgColour = dark ? wxColour( 220, 220, 220 ) : *wxBLACK;
+                SetBackgroundColour( m_bgColour );
+                UpdateAll();
+                aEvent.Skip();
+            } );
 
     initializeGraphicsContext();
     UpdateAll();

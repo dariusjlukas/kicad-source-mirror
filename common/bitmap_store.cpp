@@ -335,7 +335,12 @@ void BITMAP_STORE::ThemeChanged()
         {
         case ICON_THEME::LIGHT: m_theme = BITMAP_INFO::THEME::LIGHT; break;
         case ICON_THEME::DARK:  m_theme = BITMAP_INFO::THEME::DARK; break;
-        case ICON_THEME::AUTO:  m_theme = KIPLATFORM::UI::IsDarkTheme() ? BITMAP_INFO::THEME::DARK : BITMAP_INFO::THEME::LIGHT; break;
+        case ICON_THEME::AUTO:
+            // Follow the unified appearance preference, which itself falls back
+            // to OS detection when set to AUTO.
+            m_theme = COMMON_SETTINGS::APPEARANCE::IsEffectiveDark() ? BITMAP_INFO::THEME::DARK
+                                                                    : BITMAP_INFO::THEME::LIGHT;
+            break;
         }
     }
     else

@@ -56,7 +56,8 @@ PL_DRAW_PANEL_GAL::PL_DRAW_PANEL_GAL( wxWindow* aParentWindow, wxWindowID aWindo
 
     PL_EDITOR_SETTINGS* cfg = GetAppSettings<PL_EDITOR_SETTINGS>( "pl_editor" );
 
-    m_painter->GetSettings()->LoadColors( ::GetColorSettings( cfg ? cfg->m_ColorTheme : DEFAULT_THEME ) );
+    m_painter->GetSettings()->LoadColors( Pgm().GetSettingsManager().ResolveColorSettings(
+            cfg ? cfg->m_ColorTheme : DEFAULT_THEME ) );
 
     m_view->SetPainter( m_painter.get() );
     // This fixes the zoom in and zoom out limits

@@ -286,6 +286,76 @@ static const std::map<int, COLOR4D> s_defaultTheme =
             { LAYER_3D_SOLDERPASTE,         COLOR4D( 0.5, 0.5, 0.5, 1.0 ) }
         };
 
+
+// "KiCad Dark": shipped dark theme. PCB and gerbview defaults are already dark, so this
+// theme primarily overrides the schematic and 3D viewer keys. Any layer not present
+// here cascades through COLOR_SETTINGS' default-color machinery to s_defaultTheme.
+static const std::map<int, COLOR4D> s_defaultDarkTheme =
+        {
+            // Schematic
+            { LAYER_SCHEMATIC_ANCHOR,     CSS_COLOR( 122, 156, 255, 1 ) },
+            { LAYER_SCHEMATIC_AUX_ITEMS,  CSS_COLOR( 220, 220, 220, 1 ) },
+            { LAYER_SCHEMATIC_BACKGROUND, CSS_COLOR( 27,  31,  35,  1 ) },
+            { LAYER_HOVERED,              CSS_COLOR( 122, 156, 255, 1 ) },
+            { LAYER_BRIGHTENED,           CSS_COLOR( 240, 120, 240, 1 ) },
+            { LAYER_BUS,                  CSS_COLOR( 122, 140, 255, 1 ) },
+            { LAYER_BUS_JUNCTION,         CSS_COLOR( 122, 140, 255, 1 ) },
+            { LAYER_DEVICE_BACKGROUND,    CSS_COLOR( 60,  55,  35,  1 ) },
+            { LAYER_DEVICE,               CSS_COLOR( 229, 115, 110, 1 ) },
+            { LAYER_SCHEMATIC_CURSOR,     CSS_COLOR( 235, 235, 235, 1 ) },
+            { LAYER_DNP_MARKER,           CSS_COLOR( 230, 70,  70,  0.85 ) },
+            { LAYER_EXCLUDED_FROM_SIM,    CSS_COLOR( 130, 130, 130, 0.95 ) },
+            { LAYER_ERC_ERR,              CSS_COLOR( 240, 80,  80,  0.85 ) },
+            { LAYER_ERC_WARN,             CSS_COLOR( 240, 190, 60,  0.85 ) },
+            { LAYER_ERC_EXCLUSION,        CSS_COLOR( 130, 130, 130, 0.85 ) },
+            { LAYER_FIELDS,               CSS_COLOR( 220, 130, 220, 1 ) },
+            { LAYER_SCHEMATIC_GRID,       CSS_COLOR( 58,  63,  69,  1 ) },
+            { LAYER_SCHEMATIC_GRID_AXES,  CSS_COLOR( 122, 140, 255, 1 ) },
+            { LAYER_HIDDEN,               CSS_COLOR( 110, 110, 110, 1 ) },
+            { LAYER_JUNCTION,             CSS_COLOR( 80,  220, 100, 1 ) },
+            { LAYER_GLOBLABEL,            CSS_COLOR( 229, 115, 110, 1 ) },
+            { LAYER_HIERLABEL,            CSS_COLOR( 220, 175, 80,  1 ) },
+            { LAYER_LOCLABEL,             CSS_COLOR( 220, 220, 220, 1 ) },
+            { LAYER_NETCLASS_REFS,        CSS_COLOR( 180, 180, 180, 1 ) },
+            { LAYER_DRAG_NET_COLLISION,   CSS_COLOR( 240, 80,  80,  0.85 ) },
+            { LAYER_RULE_AREAS,           CSS_COLOR( 240, 80,  80,  1 ) },
+            { LAYER_NOCONNECT,            CSS_COLOR( 122, 140, 255, 1 ) },
+            { LAYER_NOTES,                CSS_COLOR( 122, 156, 255, 1 ) },
+            { LAYER_PRIVATE_NOTES,        CSS_COLOR( 162, 180, 255, 1 ) },
+            { LAYER_NOTES_BACKGROUND,     CSS_COLOR( 0,   0,   0,   0 ) },
+            { LAYER_PIN,                  CSS_COLOR( 229, 115, 110, 1 ) },
+            { LAYER_PINNAM,               CSS_COLOR( 91,  208, 208, 1 ) },
+            { LAYER_PINNUM,               CSS_COLOR( 240, 120, 120, 1 ) },
+            { LAYER_REFERENCEPART,        CSS_COLOR( 91,  208, 208, 1 ) },
+            { LAYER_SHEET,                CSS_COLOR( 229, 115, 110, 1 ) },
+            { LAYER_SHEET_BACKGROUND,     CSS_COLOR( 0,   0,   0,   0 ) },
+            { LAYER_SHEETFILENAME,        CSS_COLOR( 220, 175, 80,  1 ) },
+            { LAYER_SHEETFIELDS,          CSS_COLOR( 220, 130, 220, 1 ) },
+            { LAYER_SHEETLABEL,           CSS_COLOR( 91,  208, 208, 1 ) },
+            { LAYER_SHEETNAME,            CSS_COLOR( 91,  208, 208, 1 ) },
+            { LAYER_VALUEPART,            CSS_COLOR( 91,  208, 208, 1 ) },
+            { LAYER_WIRE,                 CSS_COLOR( 91,  208, 208, 1 ) },
+            { LAYER_SCHEMATIC_DRAWINGSHEET, CSS_COLOR( 229, 115, 110, 1 ) },
+            { LAYER_SCHEMATIC_PAGE_LIMITS, CSS_COLOR( 80,  80,  80,  1 ) },
+            { LAYER_OP_VOLTAGES,          CSS_COLOR( 220, 130, 180, 1 ) },
+            { LAYER_OP_CURRENTS,          CSS_COLOR( 240, 110, 110, 1 ) },
+
+            // Gerbview keeps its dark defaults but bg is shifted slightly to match canvas
+            { LAYER_GERBVIEW_BACKGROUND,  CSS_COLOR( 14,  17,  21,  1 ) },
+            { LAYER_GERBVIEW_GRID,        CSS_COLOR( 80,  80,  80,  1 ) },
+            { LAYER_GERBVIEW_PAGE_LIMITS, CSS_COLOR( 80,  80,  80,  1 ) },
+
+            // Board background slightly deeper than the default's slightly-blue tone
+            { LAYER_PCB_BACKGROUND,       CSS_COLOR( 14,  17,  21,  1 ) },
+            { LAYER_GRID,                 CSS_COLOR( 70,  70,  70,  1 ) },
+            { LAYER_PAGE_LIMITS,          CSS_COLOR( 80,  80,  80,  1 ) },
+
+            // 3D viewer: top background should not be near-white
+            { LAYER_3D_BACKGROUND_BOTTOM, COLOR4D( 0.10, 0.12, 0.15, 1.0 ) },
+            { LAYER_3D_BACKGROUND_TOP,    COLOR4D( 0.18, 0.20, 0.24, 1.0 ) },
+        };
+
+
 // These are looping colors used higher-order copper layers
 static const std::vector<COLOR4D> s_copperColors =
 {

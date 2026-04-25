@@ -63,7 +63,7 @@ SCH_DRAW_PANEL::SCH_DRAW_PANEL( wxWindow* aParentWindow, wxWindowID aWindowId,
 
     m_painter.reset( new KIGFX::SCH_PAINTER( m_gal ) );
 
-    COLOR_SETTINGS* cs = ::GetColorSettings( DEFAULT_THEME );
+    COLOR_SETTINGS* cs = Pgm().GetSettingsManager().ResolveColorSettings( DEFAULT_THEME );
 
     if( SCH_BASE_FRAME* frame = dynamic_cast<SCH_BASE_FRAME*>( GetParentEDAFrame() ) )
         cs = frame->GetColorSettings();

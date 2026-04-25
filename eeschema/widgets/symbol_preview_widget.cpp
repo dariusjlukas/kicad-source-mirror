@@ -74,7 +74,8 @@ SYMBOL_PREVIEW_WIDGET::SYMBOL_PREVIEW_WIDGET( wxWindow* aParent, KIWAY* aKiway, 
     KIGFX::VIEW* view = m_preview->GetView();
     m_renderSettings = static_cast<SCH_RENDER_SETTINGS*>( view->GetPainter()->GetSettings() );
 
-    if( COLOR_SETTINGS* cs = ::GetColorSettings( app_settings ? app_settings->m_ColorTheme : DEFAULT_THEME ) )
+    if( COLOR_SETTINGS* cs = Pgm().GetSettingsManager().ResolveColorSettings(
+                app_settings ? app_settings->m_ColorTheme : DEFAULT_THEME ) )
         m_renderSettings->LoadColors( cs );
 
     const COLOR4D& backgroundColor = m_renderSettings->GetBackgroundColor();

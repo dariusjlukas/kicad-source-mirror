@@ -24,6 +24,7 @@
 #include <kiplatform/ui.h>
 #include <widgets/color_swatch.h>
 #include <wx/dcmemory.h>
+#include <wx/settings.h>
 
 #include <dpi_scaling_common.h>
 #include <dialogs/dialog_color_picker.h>
@@ -131,7 +132,9 @@ void COLOR_SWATCH::RenderToDC( wxDC* aDC, const KIGFX::COLOR4D& aColor, const KI
         rowCycle = !rowCycle;
     }
 
-    aDC->SetBrush( *wxWHITE_BRUSH );
+    // Margin color follows the window background so the swatch border is visible
+    // against both light and dark dialog chrome.
+    aDC->SetBrush( wxBrush( wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOW ) ) );
 
     if( aMargins[0] )
         aDC->DrawRectangle( 0, 0, aMargins[0], aRect.GetHeight() );

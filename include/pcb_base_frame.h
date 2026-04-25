@@ -367,6 +367,8 @@ public:
 
     void CommonSettingsChanged( int aFlags ) override;
 
+    void applyAppearanceModeToCanvas() override;
+
     PCB_DRAW_PANEL_GAL* GetCanvas() const override;
 
     virtual void ActivateGalCanvas() override;

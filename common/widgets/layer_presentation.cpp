@@ -27,6 +27,7 @@
 #include <wx/bmpbndl.h>
 #include <wx/dcmemory.h>
 #include <wx/graphics.h>
+#include <wx/settings.h>
 
 #include <gal/color4d.h>
 
@@ -56,7 +57,9 @@ void LAYER_PRESENTATION::DrawColorSwatch( wxBitmap& aLayerbmp, const COLOR4D& aB
     bmpDC.DrawRectangle( 0, 0, aLayerbmp.GetWidth(), aLayerbmp.GetHeight() );
 
     bmpDC.SetBrush( *wxTRANSPARENT_BRUSH );
-    bmpDC.SetPen( *wxBLACK_PEN );
+    // Choose a swatch outline that contrasts against the dialog background
+    // rather than always being black (invisible in dark mode).
+    bmpDC.SetPen( wxPen( wxSystemSettings::GetColour( wxSYS_COLOUR_WINDOWTEXT ) ) );
     bmpDC.DrawRectangle( 0, 0, aLayerbmp.GetWidth(), aLayerbmp.GetHeight() );
     bmpDC.SelectObject( wxNullBitmap );
 }

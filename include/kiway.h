@@ -430,6 +430,13 @@ public:
      */
     virtual void ProjectChanged();
 
+    /**
+     * Call EDA_BASE_FRAME::ApplyAppearanceMode() on every open frame so the new
+     * appearance preference (Light / Dark / Follow system) propagates without a
+     * restart. Use after persisting a change to common_settings.appearance.app_theme.
+     */
+    virtual void BroadcastApplyAppearance();
+
     KIWAY( int aCtlBits, wxFrame* aTop = nullptr );
 
     /**

@@ -80,7 +80,8 @@ SCH_DESIGN_BLOCK_PREVIEW_WIDGET::SCH_DESIGN_BLOCK_PREVIEW_WIDGET( wxWindow* aPar
     KIGFX::VIEW* view = m_preview->GetView();
     auto         settings = static_cast<SCH_RENDER_SETTINGS*>( view->GetPainter()->GetSettings() );
 
-    if( COLOR_SETTINGS* cs = ::GetColorSettings( cfg ? cfg->m_ColorTheme : DEFAULT_THEME ) )
+    if( COLOR_SETTINGS* cs = Pgm().GetSettingsManager().ResolveColorSettings(
+                cfg ? cfg->m_ColorTheme : DEFAULT_THEME ) )
         settings->LoadColors( cs );
 
     const COLOR4D& backgroundColor = settings->GetBackgroundColor();

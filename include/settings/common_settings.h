@@ -59,6 +59,14 @@ public:
         bool       grid_striping;
         bool       use_custom_cursors;
         double     zoom_correction_factor;
+
+        /**
+         * Resolve the user's app_theme preference (LIGHT/DARK/AUTO) into a concrete
+         * dark/light decision, consulting the OS appearance only for AUTO. This is
+         * the canonical "are we dark right now?" query for canvas, icons, custom
+         * widgets, and HTML CSS injection.
+         */
+        static bool IsEffectiveDark();
     };
 
     struct AUTO_BACKUP

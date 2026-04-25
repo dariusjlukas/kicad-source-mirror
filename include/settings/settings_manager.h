@@ -219,6 +219,21 @@ public:
      */
     COLOR_SETTINGS* GetColorSettings( const wxString& aName );
 
+    /**
+     * Resolve a per-app color theme selection against the active appearance preference.
+     *
+     * Resolution rules:
+     *   1. If aName is the COLOR_FOLLOW_APPEARANCE sentinel, return the built-in
+     *      light or dark theme based on COMMON_SETTINGS::APPEARANCE::IsEffectiveDark().
+     *   2. Otherwise, load the named theme. If we are in dark mode and that theme
+     *      declares a non-empty dark counterpart that resolves, return the counterpart.
+     *   3. Otherwise return the explicitly chosen theme unchanged.
+     *
+     * @param aName is the user-selected theme name (may be the FOLLOW_APPEARANCE sentinel).
+     * @return a loaded COLOR_SETTINGS object, never nullptr.
+     */
+    COLOR_SETTINGS* ResolveColorSettings( const wxString& aName );
+
     std::vector<COLOR_SETTINGS*> GetColorSettingsList();
 
     /**

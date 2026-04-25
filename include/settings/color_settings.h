@@ -79,6 +79,15 @@ public:
     void SetOverrideSchItemColors( bool aFlag ) { m_overrideSchItemColors = aFlag; }
 
     /**
+     * Filename of a related theme that the appearance resolver should swap to when
+     * the user has switched to dark mode. Empty means "no counterpart known"; in
+     * that case the resolver leaves an explicit user pick alone. See
+     * SETTINGS_MANAGER::ResolveColorSettings.
+     */
+    const wxString& GetDarkCounterpart() const { return m_darkCounterpart; }
+    void SetDarkCounterpart( const wxString& aFilename ) { m_darkCounterpart = aFilename; }
+
+    /**
      * Constructs and returns a list of color settings objects based on the built-in color themes.
      * These color settings are not backed by a file and cannot be modified by the user.
      * This is expected to be called by SETTINGS_MANAGER which will take ownership of the objects
@@ -90,6 +99,12 @@ public:
     // Names for the built-in color settings
     static const wxString COLOR_BUILTIN_DEFAULT;
     static const wxString COLOR_BUILTIN_CLASSIC;
+    static const wxString COLOR_BUILTIN_DARK;
+
+    /// Sentinel theme name meaning "follow the active appearance preference".
+    /// When stored as a per-app theme selection, the resolver maps this to one
+    /// of the built-in themes based on COMMON_SETTINGS::APPEARANCE::IsEffectiveDark().
+    static const wxString COLOR_FOLLOW_APPEARANCE;
 
 private:
     bool migrateSchema0to1();
@@ -99,6 +114,9 @@ private:
 private:
     wxString m_displayName;
     bool     m_overrideSchItemColors;
+
+    /// Filename of a paired dark theme; see GetDarkCounterpart().
+    wxString m_darkCounterpart;
 
     /**
      * Map of all layer colors.

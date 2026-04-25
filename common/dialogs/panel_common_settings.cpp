@@ -31,6 +31,8 @@
 #include <gal/graphics_abstraction_layer.h>
 #include <kiface_base.h>
 #include <kiplatform/ui.h>
+#include <kiway.h>
+#include <kiway_holder.h>
 #include <pgm_base.h>
 #include <id.h>
 #include <settings/common_settings.h>
@@ -69,13 +71,9 @@ PANEL_COMMON_SETTINGS::PANEL_COMMON_SETTINGS( wxWindow* aParent ) :
     m_rbIconThemeAuto->Show( false );
 #endif
 
-    // It's common on Windows to have separate app and system settings for light/dark
-#ifndef __WXMSW__
-    m_stAppTheme->Show( false );
-    m_rbAppThemeLight->Show( false );
-    m_rbAppThemeDark->Show( false );
-    m_rbAppThemeAuto->Show( false );
-#endif
+    // The "App theme" preference (Light / Dark / Follow system) is the unified
+    // appearance switch. It drives the canvas color theme, icon theme, and
+    // dark-aware custom widgets on every platform.
 
    	/*
    	 * Automatic canvas scaling works fine on all supported platforms, so manual scaling is disabled
@@ -173,6 +171,9 @@ bool PANEL_COMMON_SETTINGS::TransferDataFromWindow()
 {
     COMMON_SETTINGS* commonSettings = Pgm().GetCommonSettings();
 
+    const APP_THEME   prevAppTheme  = commonSettings->m_Appearance.app_theme;
+    const ICON_THEME  prevIconTheme = commonSettings->m_Appearance.icon_theme;
+
     commonSettings->m_System.file_explorer = m_textCtrlFileManager->GetValue();
     commonSettings->m_System.file_history_size = m_fileHistorySize->GetValue();
 
@@ -242,6 +243,19 @@ bool PANEL_COMMON_SETTINGS::TransferDataFromWindow()
     Pgm().WritePdfBrowserInfos();
 
     Pgm().GetSettingsManager().Save( commonSettings );
+
+    // If the appearance preference (or icon theme override) changed, broadcast
+    // ApplyAppearanceMode() across all KIWAY frames so the canvas, icons,
+    // and dark-aware widgets refresh without a restart.
+    if( commonSettings->m_Appearance.app_theme != prevAppTheme
+        || commonSettings->m_Appearance.icon_theme != prevIconTheme )
+    {
+        if( KIWAY_HOLDER* holder = dynamic_cast<KIWAY_HOLDER*>( wxGetTopLevelParent( this ) ) )
+        {
+            if( holder->HasKiway() )
+                holder->Kiway().BroadcastApplyAppearance();
+        }
+    }
 
     return true;
 }

@@ -33,6 +33,7 @@
 #include <kiplatform/environment.h>
 #include <kiplatform/io.h>
 #include <kiway.h>
+#include <layer_ids.h>
 #include <lockfile.h>
 #include <macros.h>
 #include <pgm_base.h>
@@ -298,6 +299,48 @@ std::vector<COLOR_SETTINGS*> SETTINGS_MANAGER::GetColorSettingsList()
                                        { return a->GetName() < b->GetName(); } );
 
     return ret;
+}
+
+
+COLOR_SETTINGS* SETTINGS_MANAGER::ResolveColorSettings( const wxString& aName )
+{
+    const bool dark = COMMON_SETTINGS::APPEARANCE::IsEffectiveDark();
+
+    // Sentinel: FOLLOW_APPEARANCE → pick a built-in based on the appearance pref.
+    if( aName == COLOR_SETTINGS::COLOR_FOLLOW_APPEARANCE )
+    {
+        return GetColorSettings( dark ? COLOR_SETTINGS::COLOR_BUILTIN_DARK
+                                      : COLOR_SETTINGS::COLOR_BUILTIN_DEFAULT );
+    }
+
+    COLOR_SETTINGS* picked = GetColorSettings( aName );
+
+    if( dark && picked )
+    {
+        // 1. Explicit counterpart wins. Built-in themes ship with the right
+        //    counterparts; user themes can opt in via meta.dark_counterpart.
+        if( !picked->GetDarkCounterpart().empty() )
+        {
+            if( COLOR_SETTINGS* darkPair = GetColorSettings( picked->GetDarkCounterpart() ) )
+                return darkPair;
+        }
+
+        // 2. Auto-fallback: if the picked theme would still render with a light
+        //    schematic background, substitute the built-in dark theme. This
+        //    catches the common "user.json was created from the light default
+        //    on a previous run, has no counterpart configured" case — without
+        //    a fallback the canvas would stay light when the user picks Dark.
+        const COLOR4D bg = picked->GetColor( LAYER_SCHEMATIC_BACKGROUND );
+
+        if( bg != COLOR4D::UNSPECIFIED && bg.GetBrightness() > 0.5 )
+        {
+            if( COLOR_SETTINGS* darkBuiltin =
+                        GetColorSettings( COLOR_SETTINGS::COLOR_BUILTIN_DARK ) )
+                return darkBuiltin;
+        }
+    }
+
+    return picked;
 }
 
 

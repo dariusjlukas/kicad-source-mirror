@@ -651,6 +651,24 @@ void KIWAY::ClearFileHistory()
 }
 
 
+void KIWAY::BroadcastApplyAppearance()
+{
+    if( m_ctl & KFCTL_CPP_PROJECT_SUITE )
+    {
+        EDA_BASE_FRAME* top = static_cast<EDA_BASE_FRAME*>( m_top );
+
+        if( top )
+            top->ApplyAppearanceMode();
+    }
+
+    for( unsigned i = 0; i < KIWAY_PLAYER_COUNT; ++i )
+    {
+        if( KIWAY_PLAYER* frame = GetPlayerFrame( (FRAME_T) i ) )
+            frame->ApplyAppearanceMode();
+    }
+}
+
+
 void KIWAY::ProjectChanged()
 {
     // Skip project change notifications during application shutdown to avoid

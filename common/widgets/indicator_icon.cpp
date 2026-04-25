@@ -22,6 +22,7 @@
  */
 
 #include <kiplatform/ui.h>
+#include <settings/common_settings.h>
 #include <widgets/indicator_icon.h>
 #include <wx/event.h>
 #include <wx/settings.h>
@@ -213,10 +214,14 @@ ROW_ICON_PROVIDER::ROW_ICON_PROVIDER( int aSizeDIP, wxWindow* aWindow )
     m_blankBitmap = wxBitmap( createBlankImage( toPhys( aSizeDIP ) ) );
     m_blankBitmap.SetScaleFactor( scale );
 
-    m_rightArrowBitmap = createArrow( toPhys( aSizeDIP ), scale, 1, wxColour( 64, 72, 255 ) );
+    const bool dark = COMMON_SETTINGS::APPEARANCE::IsEffectiveDark();
+    const wxColour arrowColor = dark ? wxColour( 120, 140, 255 ) : wxColour( 64, 72, 255 );
+    const wxColour dotColor   = dark ? wxColour( 180, 200, 255 ) : wxColour( 128, 144, 255 );
+
+    m_rightArrowBitmap = createArrow( toPhys( aSizeDIP ), scale, 1, arrowColor );
     m_upArrowBitmap = createArrow( toPhys( aSizeDIP - 2 ), scale, 0, shadowColor );
     m_downArrowBitmap = createArrow( toPhys( aSizeDIP - 2 ), scale, 2, shadowColor );
-    m_dotBitmap = createDiamond( toPhys( aSizeDIP ), scale, wxColour( 128, 144, 255 ) );
+    m_dotBitmap = createDiamond( toPhys( aSizeDIP ), scale, dotColor );
     m_closedBitmap = createTurndown( toPhys( aSizeDIP ), scale, 1, textColor );
     m_openBitmap = createTurndown( toPhys( aSizeDIP ), scale, 2, textColor );
 }

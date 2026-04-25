@@ -24,7 +24,9 @@
 
 #include <class_draw_panel_gal.h>
 #include <env_vars.h>
+#include <kiplatform/ui.h>
 #include <paths.h>
+#include <pgm_base.h>
 #include <search_stack.h>
 #include <settings/settings_manager.h>
 #include <settings/common_settings.h>
@@ -39,6 +41,22 @@
 #include <wx/regex.h>
 #include <wx/tokenzr.h>
 #include <wx/window.h>
+
+
+bool COMMON_SETTINGS::APPEARANCE::IsEffectiveDark()
+{
+    if( const COMMON_SETTINGS* settings = Pgm().GetCommonSettings() )
+    {
+        switch( settings->m_Appearance.app_theme )
+        {
+        case APP_THEME::LIGHT: return false;
+        case APP_THEME::DARK:  return true;
+        case APP_THEME::AUTO:  break;
+        }
+    }
+
+    return KIPLATFORM::UI::IsDarkTheme();
+}
 
 
 ///! The following environment variables will never be migrated from a previous version
@@ -74,12 +92,8 @@ COMMON_SETTINGS::COMMON_SETTINGS() :
     m_Appearance.icon_theme = ICON_THEME::AUTO;
 #endif
 
-#if defined( __WXMSW__ )
     m_params.emplace_back( new PARAM_ENUM<APP_THEME>( "appearance.app_theme", &m_Appearance.app_theme,
                                                        APP_THEME::AUTO, APP_THEME::LIGHT, APP_THEME::AUTO ) );
-#else
-    m_Appearance.app_theme = APP_THEME::AUTO;
-#endif
 
     /*
    	 * Automatic canvas scaling works fine on all supported platforms, so it's no longer exposed as

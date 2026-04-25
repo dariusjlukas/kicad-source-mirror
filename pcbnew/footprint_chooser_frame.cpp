@@ -465,7 +465,8 @@ WINDOW_SETTINGS* FOOTPRINT_CHOOSER_FRAME::GetWindowSettings( APP_SETTINGS_BASE* 
 COLOR_SETTINGS* FOOTPRINT_CHOOSER_FRAME::GetColorSettings( bool aForceRefresh ) const
 {
     FOOTPRINT_EDITOR_SETTINGS* cfg = GetAppSettings<FOOTPRINT_EDITOR_SETTINGS>( "fpedit" );
-    return ::GetColorSettings( cfg ? cfg->m_ColorTheme : DEFAULT_THEME );
+    return Pgm().GetSettingsManager().ResolveColorSettings(
+            cfg ? cfg->m_ColorTheme : DEFAULT_THEME );
 }
 
 

@@ -873,7 +873,8 @@ EDA_ANGLE FOOTPRINT_EDIT_FRAME::GetRotationAngle() const
 COLOR_SETTINGS* FOOTPRINT_EDIT_FRAME::GetColorSettings( bool aForceRefresh ) const
 {
     FOOTPRINT_EDITOR_SETTINGS* cfg = GetFootprintEditorSettings();
-    return ::GetColorSettings( cfg ? cfg->m_ColorTheme : DEFAULT_THEME );
+    return Pgm().GetSettingsManager().ResolveColorSettings(
+            cfg ? cfg->m_ColorTheme : DEFAULT_THEME );
 }
 
 

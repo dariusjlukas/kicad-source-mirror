@@ -363,7 +363,8 @@ void GERBVIEW_FRAME::SaveSettings( APP_SETTINGS_BASE* aCfg )
 COLOR_SETTINGS* GERBVIEW_FRAME::GetColorSettings( bool aForceRefresh ) const
 {
     GERBVIEW_SETTINGS* cfg = GetAppSettings<GERBVIEW_SETTINGS>( "gerbview" );
-    return ::GetColorSettings( cfg ? cfg->m_ColorTheme : DEFAULT_THEME );
+    return Pgm().GetSettingsManager().ResolveColorSettings(
+            cfg ? cfg->m_ColorTheme : DEFAULT_THEME );
 }
 
 
@@ -464,6 +465,17 @@ void GERBVIEW_FRAME::ApplyDisplaySettingsToGAL()
     settings->LoadColors( GetColorSettings() );
 
     GetCanvas()->GetView()->MarkTargetDirty( KIGFX::TARGET_NONCACHED );
+}
+
+
+void GERBVIEW_FRAME::applyAppearanceModeToCanvas()
+{
+    if( !GetCanvas() )
+        return;
+
+    ApplyDisplaySettingsToGAL();
+    GetCanvas()->GetView()->UpdateAllItems( KIGFX::COLOR );
+    GetCanvas()->Refresh();
 }
 
 

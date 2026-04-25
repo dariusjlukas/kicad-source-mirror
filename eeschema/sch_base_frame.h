@@ -257,6 +257,8 @@ public:
 
     void CommonSettingsChanged( int aFlags ) override;
 
+    void applyAppearanceModeToCanvas() override;
+
     /**
      * Helper to retrieve a layer color from the global color settings
      */

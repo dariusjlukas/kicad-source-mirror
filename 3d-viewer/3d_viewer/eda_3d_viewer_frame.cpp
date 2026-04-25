@@ -620,6 +620,21 @@ void EDA_3D_VIEWER_FRAME::CommonSettingsChanged( int aFlags )
 }
 
 
+void EDA_3D_VIEWER_FRAME::applyAppearanceModeToCanvas()
+{
+    // The 3D background (LAYER_3D_BACKGROUND_TOP/BOTTOM) and other layer presets
+    // come from the resolved COLOR_SETTINGS, which is appearance-aware now.
+    // Reload settings then trigger a redraw.
+    loadCommonSettings();
+    applySettings( GetAppSettings<EDA_3D_VIEWER_SETTINGS>( "3d_viewer" ) );
+
+    if( m_appearancePanel )
+        m_appearancePanel->CommonSettingsChanged();
+
+    NewDisplay( true );
+}
+
+
 void EDA_3D_VIEWER_FRAME::ShowChangedLanguage()
 {
     EDA_BASE_FRAME::ShowChangedLanguage();

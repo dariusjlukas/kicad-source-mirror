@@ -278,7 +278,8 @@ void PCB_BASE_EDIT_FRAME::SetObjectVisible( GAL_LAYER_ID aLayer, bool aVisible )
 COLOR_SETTINGS* PCB_BASE_EDIT_FRAME::GetColorSettings( bool aForceRefresh ) const
 {
     PCBNEW_SETTINGS* cfg = GetPcbNewSettings();
-    return ::GetColorSettings( cfg ? cfg->m_ColorTheme : DEFAULT_THEME );
+    return Pgm().GetSettingsManager().ResolveColorSettings(
+            cfg ? cfg->m_ColorTheme : DEFAULT_THEME );
 }
 
 

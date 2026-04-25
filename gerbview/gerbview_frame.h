@@ -371,6 +371,8 @@ public:
      */
     void CommonSettingsChanged( int aFlags ) override;
 
+    void applyAppearanceModeToCanvas() override;
+
     SELECTION& GetCurrentSelection() override;
 
     /**

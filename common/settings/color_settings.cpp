@@ -33,6 +33,8 @@
 const int colorsSchemaVersion = 5;
 const wxString COLOR_SETTINGS::COLOR_BUILTIN_DEFAULT = "_builtin_default";
 const wxString COLOR_SETTINGS::COLOR_BUILTIN_CLASSIC = "_builtin_classic";
+const wxString COLOR_SETTINGS::COLOR_BUILTIN_DARK    = "_builtin_dark";
+const wxString COLOR_SETTINGS::COLOR_FOLLOW_APPEARANCE = "_follow_appearance_";
 
 
 COLOR_SETTINGS::COLOR_SETTINGS( const wxString& aFilename, bool aAbsolutePath ) :
@@ -44,6 +46,9 @@ COLOR_SETTINGS::COLOR_SETTINGS( const wxString& aFilename, bool aAbsolutePath ) 
 
     m_params.emplace_back( new PARAM<wxString>( "meta.name", &m_displayName,
                                                 wxS( "KiCad Default" ) ) );
+
+    m_params.emplace_back( new PARAM<wxString>( "meta.dark_counterpart", &m_darkCounterpart,
+                                                wxEmptyString ) );
 
     m_params.emplace_back( new PARAM<bool>( "schematic.override_item_colors",
                                             &m_overrideSchItemColors, false ) );
@@ -333,6 +338,7 @@ COLOR_SETTINGS& COLOR_SETTINGS::operator=( const COLOR_SETTINGS &aOther )
 void COLOR_SETTINGS::initFromOther( const COLOR_SETTINGS& aOther )
 {
     m_displayName           = aOther.m_displayName;
+    m_darkCounterpart       = aOther.m_darkCounterpart;
     m_overrideSchItemColors = aOther.m_overrideSchItemColors;
     m_colors                = aOther.m_colors;
     m_defaultColors         = aOther.m_defaultColors;
@@ -444,6 +450,7 @@ std::vector<COLOR_SETTINGS*> COLOR_SETTINGS::CreateBuiltinColorSettings()
 {
     COLOR_SETTINGS* defaultTheme = new COLOR_SETTINGS( COLOR_BUILTIN_DEFAULT );
     defaultTheme->SetName( _( "KiCad Default" ) );
+    defaultTheme->SetDarkCounterpart( COLOR_BUILTIN_DARK );
     defaultTheme->m_writeFile = false;
     defaultTheme->Load();   // We can just get the colors out of the param defaults for this one
 
@@ -459,10 +466,22 @@ std::vector<COLOR_SETTINGS*> COLOR_SETTINGS::CreateBuiltinColorSettings()
     for( const std::pair<int, COLOR4D> entry : s_classicTheme )
         classicTheme->m_colors[entry.first] = entry.second;
 
+    // Built-in dark theme. Most PCB/gerbview keys cascade to s_defaultTheme defaults
+    // (which are already dark-friendly); s_defaultDarkTheme overrides the schematic
+    // side and a few canvas backgrounds.
+    COLOR_SETTINGS* darkTheme = new COLOR_SETTINGS( COLOR_BUILTIN_DARK );
+    darkTheme->SetName( _( "KiCad Dark" ) );
+    darkTheme->m_writeFile = false;
+    darkTheme->Load(); // Start from the default theme's full color set
+
+    for( const std::pair<int, COLOR4D> entry : s_defaultDarkTheme )
+        darkTheme->m_colors[entry.first] = entry.second;
+
     std::vector<COLOR_SETTINGS*> ret;
 
     ret.push_back( defaultTheme );
     ret.push_back( classicTheme );
+    ret.push_back( darkTheme );
 
     return ret;
 }

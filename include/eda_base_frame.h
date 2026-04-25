@@ -637,6 +637,25 @@ public:
     virtual void HandleSystemColorChange();
 
     /**
+     * Apply the user's appearance preference (Light / Dark / Follow system).
+     *
+     * This is the canonical handler for both OS-driven and user-driven appearance
+     * changes: refreshes the icon set, re-resolves the canvas color theme via
+     * applyAppearanceModeToCanvas(), rebuilds menus and toolbars, and synthesizes
+     * a wxSysColourChangedEvent so widgets bound to EVT_SYS_COLOUR_CHANGED update
+     * (HTML_WINDOW, WX_INFOBAR, custom buttons, etc.).
+     */
+    virtual void ApplyAppearanceMode();
+
+    /**
+     * Per-frame hook for refreshing canvas colors when the appearance mode changes.
+     * Base implementation is a no-op. Frames that own a GAL canvas (schematic,
+     * PCB, gerbview, 3D viewer) override this to re-load colors from the resolved
+     * COLOR_SETTINGS and refresh the canvas.
+     */
+    virtual void applyAppearanceModeToCanvas() {}
+
+    /**
      * Check if this frame is ready to accept API commands.
      *
      * A frame might not accept commands if a long-running process is underway, a dialog is open,
@@ -838,6 +857,10 @@ private:
 
     /// Set by #NonUserClose() to indicate that the user did not request the current close.
     bool            m_isNonUserClose;
+
+    /// Recursion guard for ApplyAppearanceMode (which synthesizes
+    /// wxSysColourChangedEvent that re-enters onSystemColorChange).
+    bool            m_applyingAppearance = false;
 
     /**
      * Associate file extensions with action to execute.

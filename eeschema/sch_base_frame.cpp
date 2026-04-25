@@ -610,6 +610,25 @@ void SCH_BASE_FRAME::CommonSettingsChanged( int aFlags )
 }
 
 
+void SCH_BASE_FRAME::applyAppearanceModeToCanvas()
+{
+    if( !GetCanvas() )
+        return;
+
+    // ResolveColorSettings() picks light/dark/counterpart based on the new mode.
+    COLOR_SETTINGS* colorSettings = GetColorSettings( true );
+
+    GetCanvas()->GetView()->GetPainter()->GetSettings()->LoadColors( colorSettings );
+    GetCanvas()->GetGAL()->SetAxesColor( colorSettings->GetColor( LAYER_SCHEMATIC_GRID_AXES ) );
+    // GAL clear color is set once at construction; refresh it now.
+    GetCanvas()->GetGAL()->SetClearColor( colorSettings->GetColor( LAYER_SCHEMATIC_BACKGROUND ) );
+    GetCanvas()->GetView()->UpdateAllItems( KIGFX::ALL );
+    GetCanvas()->GetView()->RecacheAllItems();
+    GetCanvas()->GetView()->MarkTargetDirty( KIGFX::TARGET_NONCACHED );
+    GetCanvas()->Refresh();
+}
+
+
 COLOR_SETTINGS* SCH_BASE_FRAME::GetColorSettings( bool aForceRefresh ) const
 {
     if( !m_colorSettings || aForceRefresh )
@@ -626,7 +645,10 @@ COLOR_SETTINGS* SCH_BASE_FRAME::GetColorSettings( bool aForceRefresh ) const
             }
         }
 
-        const_cast<SCH_BASE_FRAME*>( this )->m_colorSettings = ::GetColorSettings( colorTheme );
+        // Route through the appearance-aware resolver so the FOLLOW_APPEARANCE
+        // sentinel and dark-counterpart logic apply.
+        const_cast<SCH_BASE_FRAME*>( this )->m_colorSettings =
+                Pgm().GetSettingsManager().ResolveColorSettings( colorTheme );
     }
 
     return m_colorSettings;

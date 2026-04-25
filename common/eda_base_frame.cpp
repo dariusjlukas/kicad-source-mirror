@@ -1838,17 +1838,62 @@ wxSize EDA_BASE_FRAME::GetWindowSize()
 
 void EDA_BASE_FRAME::HandleSystemColorChange()
 {
-    // Update the icon theme when the system theme changes and update the toolbars
+    // Same code path as a user-driven appearance change.
+    ApplyAppearanceMode();
+}
+
+
+void EDA_BASE_FRAME::ApplyAppearanceMode()
+{
+    // Recursion guard: ApplyAppearanceMode synthesizes wxEVT_SYS_COLOUR_CHANGED
+    // below, which re-enters onSystemColorChange. Without this guard we'd loop.
+    if( m_applyingAppearance )
+        return;
+
+    m_applyingAppearance = true;
+
+    // 1. Pick light/dark icon variant based on the resolved appearance.
     GetBitmapStore()->ThemeChanged();
+
+    // 2. Rebuild scaled bitmap cache and AUI toolbar bitmaps.
     ThemeChanged();
 
-    // This isn't handled by ThemeChanged()
+    // 3. Per-frame canvas hook: re-resolves the active COLOR_SETTINGS and reloads
+    //    GAL colors. Base implementation is a no-op; canvas frames override.
+    applyAppearanceModeToCanvas();
+
+    // 4. Menu/toolbar rebuild — needed for icons-in-menus and menu hotkeys.
     if( GetMenuBar() )
     {
-        // For icons in menus, icon scaling & hotkeys
         ReCreateMenuBar();
         GetMenuBar()->Refresh();
     }
+
+    // 5. Walk child windows and dispatch wxEVT_SYS_COLOUR_CHANGED so widgets
+    //    that already bind it — HTML_WINDOW, WX_INFOBAR, STD_BITMAP_BUTTON,
+    //    SPLIT_BUTTON, WX_HTML_REPORT_PANEL, etc. — pick up the new appearance.
+    //    We dispatch to descendants directly (not via ProcessWindowEvent on
+    //    `this`, which would re-enter onSystemColorChange).
+    std::function<void( wxWindow* )> dispatch =
+            [&dispatch]( wxWindow* aWin )
+            {
+                wxSysColourChangedEvent evt;
+                evt.SetEventObject( aWin );
+                aWin->ProcessWindowEvent( evt );
+
+                for( wxWindow* child : aWin->GetChildren() )
+                    dispatch( child );
+            };
+
+    for( wxWindow* child : GetChildren() )
+        dispatch( child );
+
+    if( m_auimgr.GetManagedWindow() )
+        m_auimgr.Update();
+
+    Refresh();
+
+    m_applyingAppearance = false;
 }
 
 

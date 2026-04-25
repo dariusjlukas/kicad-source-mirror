@@ -379,7 +379,10 @@ COLOR_SETTINGS* SYMBOL_EDIT_FRAME::GetColorSettings( bool aForceRefresh ) const
     if( cfg && static_cast<SYMBOL_EDITOR_SETTINGS*>( cfg )->m_UseEeschemaColorSettings )
         cfg = GetAppSettings<EESCHEMA_SETTINGS>( "eeschema" );
 
-    return ::GetColorSettings( cfg ? cfg->m_ColorTheme : DEFAULT_THEME );
+    // Route through the appearance-aware resolver so the FOLLOW_APPEARANCE
+    // sentinel and dark-counterpart logic apply.
+    return Pgm().GetSettingsManager().ResolveColorSettings(
+            cfg ? cfg->m_ColorTheme : DEFAULT_THEME );
 }
 
 
