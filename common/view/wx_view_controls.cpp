@@ -898,7 +898,7 @@ VECTOR2D WX_VIEW_CONTROLS::GetCursorPosition( bool aEnableSnapping ) const
 
 
 void WX_VIEW_CONTROLS::SetCursorPosition( const VECTOR2D& aPosition, bool aWarpView, bool aTriggeredByArrows,
-                                          long aArrowCommand )
+                                          long aArrowCommand, bool aWarpMouse )
 {
     m_updateCursor = false;
 
@@ -919,7 +919,9 @@ void WX_VIEW_CONTROLS::SetCursorPosition( const VECTOR2D& aPosition, bool aWarpV
         m_cursorWarped = true;
     }
 
-    WarpMouseCursor( clampedPosition, true, aWarpView );
+    if( aWarpMouse )
+        WarpMouseCursor( clampedPosition, true, aWarpView );
+
     m_cursorPos = clampedPosition;
 }
 

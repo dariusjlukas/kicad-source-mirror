@@ -289,9 +289,15 @@ public:
      *
      * @param aPosition is the requested cursor position in the world coordinates.
      * @param aWarpView enables/disables view warp if the cursor is outside the current viewport.
+     * @param aWarpMouse when false, update internal cursor state and bookkeeping flags
+     *                  (m_cursorPos, m_cursorWarped, motion-event suppression) but skip the
+     *                  OS-level pointer warp. Useful when the caller knows the position is
+     *                  already where the OS pointer is — on Wayland sessions a no-op warp
+     *                  still injects a phantom motion delta.
      */
     virtual void SetCursorPosition( const VECTOR2D& aPosition, bool aWarpView = true,
-                                    bool aTriggeredByArrows = false, long aArrowCommand = 0 ) = 0;
+                                    bool aTriggeredByArrows = false, long aArrowCommand = 0,
+                                    bool aWarpMouse = true ) = 0;
 
 
     /**

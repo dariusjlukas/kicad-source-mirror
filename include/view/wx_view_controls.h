@@ -90,7 +90,7 @@ public:
     VECTOR2D GetRawCursorPosition( bool aSnappingEnabled = true ) const override;
 
     void SetCursorPosition( const VECTOR2D& aPosition, bool warpView, bool aTriggeredByArrows,
-                            long aArrowCommand ) override;
+                            long aArrowCommand, bool aWarpMouse = true ) override;
 
     /// @copydoc VIEW_CONTROLS::SetCrossHairCursorPosition()
     void SetCrossHairCursorPosition( const VECTOR2D& aPosition, bool aWarpView ) override;

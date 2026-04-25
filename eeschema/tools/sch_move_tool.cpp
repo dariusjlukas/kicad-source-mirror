@@ -1369,8 +1369,11 @@ void SCH_MOVE_TOOL::initializeMoveOperation( const TOOL_EVENT& aEvent, SCH_SELEC
         }
     }
 
-    if( needCursorWarp )
-        controls->SetCursorPosition( m_cursor, false );
+    // Always update the controller's internal cursor state so the next motion event
+    // gets one frame of auto-pan grace (m_cursorWarped) and m_cursorPos suppression
+    // (m_updateCursor). Only perform the OS pointer warp when m_cursor actually
+    // changed; a no-op warp injects a phantom delta on Wayland sessions.
+    controls->SetCursorPosition( m_cursor, false, false, 0, /*aWarpMouse=*/needCursorWarp );
 
     controls->SetAutoPan( true );
     m_moveInProgress = true;
