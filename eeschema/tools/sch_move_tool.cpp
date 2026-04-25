@@ -1350,7 +1350,12 @@ void SCH_MOVE_TOOL::initializeMoveOperation( const TOOL_EVENT& aEvent, SCH_SELEC
     // hierarchical sheets or symbols can have the anchor outside the view)
     else if( aSelection.Size() == 1 && !sch_item->IsMovableFromAnchorPoint() )
     {
-        m_cursor = getViewControls()->GetCursorPosition( true );
+        VECTOR2I newCursor = getViewControls()->GetCursorPosition( true );
+
+        if( newCursor != m_cursor )
+            needCursorWarp = true;
+
+        m_cursor = newCursor;
         m_anchorPos = m_cursor;
     }
     else
