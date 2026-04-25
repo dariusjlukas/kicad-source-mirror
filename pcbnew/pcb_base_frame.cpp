@@ -989,11 +989,18 @@ void PCB_BASE_FRAME::applyAppearanceModeToCanvas()
     if( !GetCanvas() )
         return;
 
-    KIGFX::VIEW*         view = GetCanvas()->GetView();
-    KIGFX::PCB_PAINTER*  painter = static_cast<KIGFX::PCB_PAINTER*>( view->GetPainter() );
-    PCB_RENDER_SETTINGS* settings = painter->GetSettings();
+    KIGFX::VIEW* view = GetCanvas()->GetView();
 
-    settings->LoadColors( GetColorSettings( true ) );
+    if( !view )
+        return;
+
+    KIGFX::PCB_PAINTER* painter = static_cast<KIGFX::PCB_PAINTER*>( view->GetPainter() );
+
+    if( painter )
+    {
+        if( PCB_RENDER_SETTINGS* settings = painter->GetSettings() )
+            settings->LoadColors( GetColorSettings( true ) );
+    }
 
     view->UpdateAllItems( KIGFX::COLOR );
     GetCanvas()->Refresh();

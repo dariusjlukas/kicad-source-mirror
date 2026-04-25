@@ -1436,6 +1436,14 @@ mpWindow::mpWindow( wxWindow* parent, wxWindowID id ) :
     Bind( wxEVT_SYS_COLOUR_CHANGED,
             [this]( wxSysColourChangedEvent& aEvent )
             {
+                // Skip work if we're already being torn down — UpdateAll()
+                // would touch m_buff_bmp, which the dtor frees.
+                if( IsBeingDeleted() )
+                {
+                    aEvent.Skip();
+                    return;
+                }
+
                 const bool dark = COMMON_SETTINGS::APPEARANCE::IsEffectiveDark();
                 m_bgColour = dark ? wxColour( 30, 33, 38 )    : *wxWHITE;
                 m_fgColour = dark ? wxColour( 220, 220, 220 ) : *wxBLACK;
