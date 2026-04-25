@@ -1,5 +1,6 @@
 .downloads-by-cmake
 .gdb_history
+.claude/
 boost_root
 /Build*
 /build*
