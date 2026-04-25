@@ -1852,6 +1852,13 @@ void EDA_BASE_FRAME::ApplyAppearanceMode()
 
     m_applyingAppearance = true;
 
+    // RAII reset, so an exception inside the body cannot leave the guard latched.
+    struct ResetOnExit
+    {
+        bool& flag;
+        ~ResetOnExit() { flag = false; }
+    } resetGuard{ m_applyingAppearance };
+
     // 1. Pick light/dark icon variant based on the resolved appearance.
     GetBitmapStore()->ThemeChanged();
 
@@ -1892,8 +1899,6 @@ void EDA_BASE_FRAME::ApplyAppearanceMode()
         m_auimgr.Update();
 
     Refresh();
-
-    m_applyingAppearance = false;
 }
 
 
