@@ -45,13 +45,16 @@
 
 bool COMMON_SETTINGS::APPEARANCE::IsEffectiveDark()
 {
-    if( const COMMON_SETTINGS* settings = Pgm().GetCommonSettings() )
+    if( PGM_BASE* pgm = PgmOrNull() )
     {
-        switch( settings->m_Appearance.app_theme )
+        if( const COMMON_SETTINGS* settings = pgm->GetCommonSettings() )
         {
-        case APP_THEME::LIGHT: return false;
-        case APP_THEME::DARK:  return true;
-        case APP_THEME::AUTO:  break;
+            switch( settings->m_Appearance.app_theme )
+            {
+            case APP_THEME::LIGHT: return false;
+            case APP_THEME::DARK:  return true;
+            case APP_THEME::AUTO:  break;
+            }
         }
     }
 
