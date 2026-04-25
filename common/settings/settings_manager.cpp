@@ -251,6 +251,13 @@ void SETTINGS_MANAGER::FlushAndRelease( JSON_SETTINGS* aSettings, bool aSave )
 
 COLOR_SETTINGS* SETTINGS_MANAGER::GetColorSettings( const wxString& aName )
 {
+    // The FOLLOW_APPEARANCE sentinel is not a real theme name and must never be
+    // persisted as one. Resolve it before any of the load/register fall-through
+    // paths below so direct callers (jobs handler, sch_plotter, etc.) can't
+    // create a phantom "_follow_appearance_.json" theme.
+    if( aName == COLOR_SETTINGS::COLOR_FOLLOW_APPEARANCE )
+        return ResolveColorSettings( aName );
+
     // Find settings the fast way
     if( m_color_settings.count( aName ) )
         return m_color_settings.at( aName );
@@ -315,29 +322,15 @@ COLOR_SETTINGS* SETTINGS_MANAGER::ResolveColorSettings( const wxString& aName )
 
     COLOR_SETTINGS* picked = GetColorSettings( aName );
 
-    if( dark && picked )
+    // Explicit counterpart wins. Built-in themes ship with the right
+    // counterparts; user themes can opt in via meta.dark_counterpart.
+    // No brightness-based heuristic: a user with a custom light theme who
+    // hasn't configured a counterpart keeps that theme. If they want auto-
+    // swap, they can pick the FOLLOW_APPEARANCE entry or set a counterpart.
+    if( dark && picked && !picked->GetDarkCounterpart().empty() )
     {
-        // 1. Explicit counterpart wins. Built-in themes ship with the right
-        //    counterparts; user themes can opt in via meta.dark_counterpart.
-        if( !picked->GetDarkCounterpart().empty() )
-        {
-            if( COLOR_SETTINGS* darkPair = GetColorSettings( picked->GetDarkCounterpart() ) )
-                return darkPair;
-        }
-
-        // 2. Auto-fallback: if the picked theme would still render with a light
-        //    schematic background, substitute the built-in dark theme. This
-        //    catches the common "user.json was created from the light default
-        //    on a previous run, has no counterpart configured" case — without
-        //    a fallback the canvas would stay light when the user picks Dark.
-        const COLOR4D bg = picked->GetColor( LAYER_SCHEMATIC_BACKGROUND );
-
-        if( bg != COLOR4D::UNSPECIFIED && bg.GetBrightness() > 0.5 )
-        {
-            if( COLOR_SETTINGS* darkBuiltin =
-                        GetColorSettings( COLOR_SETTINGS::COLOR_BUILTIN_DARK ) )
-                return darkBuiltin;
-        }
+        if( COLOR_SETTINGS* darkPair = GetColorSettings( picked->GetDarkCounterpart() ) )
+            return darkPair;
     }
 
     return picked;
