@@ -247,13 +247,20 @@ bool PANEL_COMMON_SETTINGS::TransferDataFromWindow()
     // If the appearance preference (or icon theme override) changed, broadcast
     // ApplyAppearanceMode() across all KIWAY frames so the canvas, icons,
     // and dark-aware widgets refresh without a restart.
+    //
+    // Defer via CallAfter so the broadcast doesn't walk descendants of the
+    // still-modal Preferences dialog. The dialog returns first; the appearance
+    // change lands one event-loop tick later.
     if( commonSettings->m_Appearance.app_theme != prevAppTheme
         || commonSettings->m_Appearance.icon_theme != prevIconTheme )
     {
         if( KIWAY_HOLDER* holder = dynamic_cast<KIWAY_HOLDER*>( wxGetTopLevelParent( this ) ) )
         {
             if( holder->HasKiway() )
-                holder->Kiway().BroadcastApplyAppearance();
+            {
+                KIWAY* kiway = &holder->Kiway();
+                CallAfter( [kiway]() { kiway->BroadcastApplyAppearance(); } );
+            }
         }
     }
 
