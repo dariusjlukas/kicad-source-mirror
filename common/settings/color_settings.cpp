@@ -449,10 +449,12 @@ void COLOR_SETTINGS::SetColor( int aLayer, const COLOR4D& aColor )
 std::vector<COLOR_SETTINGS*> COLOR_SETTINGS::CreateBuiltinColorSettings()
 {
     COLOR_SETTINGS* defaultTheme = new COLOR_SETTINGS( COLOR_BUILTIN_DEFAULT );
-    defaultTheme->SetName( _( "KiCad Default" ) );
-    defaultTheme->SetDarkCounterpart( COLOR_BUILTIN_DARK );
     defaultTheme->m_writeFile = false;
     defaultTheme->Load();   // We can just get the colors out of the param defaults for this one
+    // Load() resets PARAM-bound members to their JSON defaults when the key is absent,
+    // so the explicit metadata has to be applied afterwards.
+    defaultTheme->SetName( _( "KiCad Default" ) );
+    defaultTheme->SetDarkCounterpart( COLOR_BUILTIN_DARK );
 
     COLOR_SETTINGS* classicTheme = new COLOR_SETTINGS( COLOR_BUILTIN_CLASSIC );
     classicTheme->SetName( _( "KiCad Classic" ) );
@@ -470,9 +472,9 @@ std::vector<COLOR_SETTINGS*> COLOR_SETTINGS::CreateBuiltinColorSettings()
     // (which are already dark-friendly); s_defaultDarkTheme overrides the schematic
     // side and a few canvas backgrounds.
     COLOR_SETTINGS* darkTheme = new COLOR_SETTINGS( COLOR_BUILTIN_DARK );
-    darkTheme->SetName( _( "KiCad Dark" ) );
     darkTheme->m_writeFile = false;
     darkTheme->Load(); // Start from the default theme's full color set
+    darkTheme->SetName( _( "KiCad Dark" ) );
 
     for( const std::pair<int, COLOR4D> entry : s_defaultDarkTheme )
         darkTheme->m_colors[entry.first] = entry.second;
