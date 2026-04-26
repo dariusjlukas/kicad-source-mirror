@@ -26,6 +26,13 @@
 include( ${KICAD_CMAKE_MODULE_PATH}/KiCadVersion.cmake )
 include( ${KICAD_CMAKE_MODULE_PATH}/KiCadFullVersion.cmake )
 
+# Capture the moment this header is generated. Because the version_header
+# custom target runs on every build, this macro changes each invocation and
+# forces build_version.cpp to recompile, giving the About dialog a truthful
+# "built at" timestamp instead of the stale __DATE__/__TIME__ of the last
+# real recompile.
+string( TIMESTAMP KICAD_BUILD_TIMESTAMP "%Y-%m-%d %H:%M:%S UTC" UTC )
+
 # Extract the major and minor build version as a string
 string( REGEX MATCH
         "([0-9]+)\\.([0-9]+)\\.([0-9]+).*"
@@ -72,6 +79,7 @@ set( _wvh_new_version_text
 #endif
 
 #define KICAD_COMMIT_HASH               \"${KICAD_COMMIT_HASH}\"
+#define KICAD_BUILD_TIMESTAMP           \"${KICAD_BUILD_TIMESTAMP}\"
 #define KICAD_VERSION                   \"${KICAD_VERSION}\"
 #define KICAD_VERSION_FULL              \"${KICAD_VERSION_FULL}\"
 #define KICAD_SEMANTIC_VERSION          \"${KICAD_SEMANTIC_VERSION}\"

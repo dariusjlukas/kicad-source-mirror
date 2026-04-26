@@ -72,7 +72,8 @@ static void buildKicadAboutBanner( EDA_BASE_FRAME* aParent, ABOUT_APP_INFO& aInf
 #else
             << wxT( ", release" )
 #endif
-            << wxT( " build" );
+            << wxT( " build, built " )
+            << GetBuildDate();
 
     aInfo.SetBuildVersion( version );
     aInfo.SetBuildDate( GetBuildDate() );
@@ -105,6 +106,18 @@ static void buildKicadAboutBanner( EDA_BASE_FRAME* aParent, ABOUT_APP_INFO& aInf
 
     // info/description part HTML formatted:
     wxString description;
+
+    /* Unofficial-fork notice: this build carries local modifications and is
+     * not an official KiCad release. Make this prominent so users (and bug
+     * reporters) cannot mistake it for upstream. */
+    description << wxT( "<p><b><font color='#B00020'>" )
+                << _( "UNOFFICIAL MODIFIED BUILD" )
+                << wxT( "</font></b><br>" )
+                << _( "This is a personal fork of KiCad with local changes. "
+                      "It is not endorsed by or affiliated with the KiCad project. "
+                      "Please reproduce any issues on an unmodified upstream build "
+                      "before reporting them to the KiCad bug tracker." )
+                << wxT( "</p>" );
 
     /* short description */
     description << wxT( "<p>" );

@@ -38,6 +38,13 @@ add_subdirectory( io/pads )
 set( KICAD_VERSION_EXTRA "" CACHE STRING
     "User defined configuration string to append to KiCad version." )
 
+# Local fork tag: when the user has not supplied an explicit KICAD_VERSION_EXTRA,
+# stamp the build with a fork suffix so it is always clear this is not an
+# official upstream KiCad build. Pass -DKICAD_VERSION_EXTRA=<your-tag> to override.
+if( NOT KICAD_VERSION_EXTRA )
+    set( KICAD_VERSION_EXTRA "djl-fork" )
+endif()
+
 # Generate version header file.
 add_custom_target(
     version_header ALL

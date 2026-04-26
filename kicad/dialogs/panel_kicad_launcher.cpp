@@ -35,6 +35,31 @@ PANEL_KICAD_LAUNCHER::PANEL_KICAD_LAUNCHER( wxWindow* aParent ) :
         PANEL_KICAD_LAUNCHER_BASE( aParent ),
         m_frame( static_cast<KICAD_MANAGER_FRAME*>( aParent->GetParent() ) )
 {
+    // Caution-yellow banner so this build is visually distinguishable from
+    // an upstream KiCad install when both are present on the same machine.
+    // Fixed colors (yellow/black) by design — the banner must read the same
+    // in light and dark themes.
+    wxPanel* forkBanner = new wxPanel( this, wxID_ANY );
+    forkBanner->SetBackgroundColour( wxColour( 255, 214, 0 ) );
+
+    wxStaticText* forkBannerText = new wxStaticText(
+            forkBanner, wxID_ANY,
+            _( "MODIFIED FORK — local changes, not official KiCad" ) );
+
+    wxFont forkBannerFont = forkBannerText->GetFont();
+    forkBannerFont.SetWeight( wxFONTWEIGHT_BOLD );
+    forkBannerText->SetFont( forkBannerFont );
+    forkBannerText->SetForegroundColour( *wxBLACK );
+
+    wxBoxSizer* forkBannerSizer = new wxBoxSizer( wxHORIZONTAL );
+    forkBannerSizer->AddStretchSpacer();
+    forkBannerSizer->Add( forkBannerText, 0, wxALIGN_CENTER_VERTICAL | wxALL, 6 );
+    forkBannerSizer->AddStretchSpacer();
+    forkBanner->SetSizer( forkBannerSizer );
+
+    GetSizer()->Insert( 0, forkBanner, 0, wxEXPAND );
+    Layout();
+
     CreateLaunchers();
 
     Bind( wxEVT_SYS_COLOUR_CHANGED, wxSysColourChangedEventHandler( PANEL_KICAD_LAUNCHER::onThemeChanged ), this );
