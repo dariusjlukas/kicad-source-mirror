@@ -250,14 +250,21 @@ bool EDA_DRAW_PANEL_GAL::DoRePaint( bool aAllowSkip )
     try
     {
         VECTOR2D cursorPos = m_viewControls->GetCursorPosition();
+        VECTOR2D mousePos  = m_viewControls->GetMousePosition( true );
         bool viewDirty = m_view->IsDirty();
         bool cursorMoved = ( cursorPos != m_lastCursorPosition );
+
+        // The in-canvas pointer indicator (active when the OS cursor is hidden)
+        // tracks the raw mouse, so it must repaint on raw moves between grid points
+        // — otherwise the icon stutters along with the snapped crosshair.
+        bool mouseMoved = m_gal->IsNativeCursorHidden()
+                          && ( mousePos != m_lastMousePosition );
         bool hasPendingItemUpdates = m_view->HasPendingItemUpdates();
 
         // Skip all update work when nothing has changed since the previous frame.
         // Never skip when responding to a native paint event or explicit ForceRefresh
         // because the window content may have been invalidated by the OS.
-        if( aAllowSkip && !viewDirty && !cursorMoved && !hasPendingItemUpdates )
+        if( aAllowSkip && !viewDirty && !cursorMoved && !mouseMoved && !hasPendingItemUpdates )
         {
             m_lastRepaintEnd = wxGetLocalTimeMillis();
             return true;
@@ -293,13 +300,14 @@ bool EDA_DRAW_PANEL_GAL::DoRePaint( bool aAllowSkip )
 
         // After processing item updates, skip the GL cycle when neither the
         // view targets nor the cursor position have changed.
-        if( aAllowSkip && !viewDirty && !cursorMoved )
+        if( aAllowSkip && !viewDirty && !cursorMoved && !mouseMoved )
         {
             m_lastRepaintEnd = wxGetLocalTimeMillis();
             return true;
         }
 
         m_lastCursorPosition = cursorPos;
+        m_lastMousePosition  = mousePos;
 
         // GAL_DRAWING_CONTEXT can throw in the dtor, so we need to scope
         // the full lifetime inside the try block
@@ -344,6 +352,7 @@ bool EDA_DRAW_PANEL_GAL::DoRePaint( bool aAllowSkip )
                 isDirty = true;
             }
 
+            m_gal->SetMousePosition( mousePos );
             m_gal->DrawCursor( cursorPos );
 
             cntCtxDestroy.Start();

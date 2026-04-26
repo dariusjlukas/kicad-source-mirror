@@ -566,6 +566,9 @@ void APP_SETTINGS_BASE::addParamsForWindow( WINDOW_SETTINGS* aWindow, const std:
 
     m_params.emplace_back( new PARAM<KIGFX::CROSS_HAIR_MODE>( aJsonPath + ".cursor.cross_hair_mode",
             &aWindow->cursor.cross_hair_mode, KIGFX::CROSS_HAIR_MODE::SMALL_CROSS ) );
+
+    m_params.emplace_back( new PARAM<bool>( aJsonPath + ".cursor.hide_os_cursor",
+            &aWindow->cursor.hide_os_cursor, false ) );
 }
 
 

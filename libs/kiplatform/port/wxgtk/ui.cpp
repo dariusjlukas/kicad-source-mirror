@@ -183,6 +183,37 @@ void KIPLATFORM::UI::FixupCancelButtonCmdKeyCollision( wxWindow *aWindow )
 }
 
 
+void KIPLATFORM::UI::ForceCursorBlank( wxWindow* aWindow )
+{
+    if( !aWindow )
+        return;
+
+    GtkWidget* widget = aWindow->GetHandle();
+
+    if( !widget )
+        return;
+
+    // Drawable widgets (e.g. wxGLCanvas) own a child GdkWindow that owns the cursor.
+    // Setting it on the widget's main GdkWindow doesn't reach the actual draw surface.
+    GdkWindow* gdkWin = aWindow->GTKGetDrawingWindow();
+
+    if( !gdkWin )
+        gdkWin = gtk_widget_get_window( widget );
+
+    if( !gdkWin )
+        return;
+
+    GdkDisplay* disp = gdk_window_get_display( gdkWin );
+    GdkCursor* blank = gdk_cursor_new_for_display( disp, GDK_BLANK_CURSOR );
+
+    if( blank )
+    {
+        gdk_window_set_cursor( gdkWin, blank );
+        g_object_unref( blank );
+    }
+}
+
+
 bool KIPLATFORM::UI::IsStockCursorOk( wxStockCursor aCursor )
 {
     switch( aCursor )

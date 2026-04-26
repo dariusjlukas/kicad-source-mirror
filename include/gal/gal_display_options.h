@@ -114,6 +114,9 @@ namespace KIGFX
         ///< Force cursor display
         bool m_forceDisplayCursor;
 
+        ///< Hide the OS pointer over the canvas (the GAL crosshair stands in for it).
+        bool m_hideNativeCursor;
+
         ///< The pixel scale factor (>1 for hi-DPI scaled displays)
         double m_scaleFactor;
 

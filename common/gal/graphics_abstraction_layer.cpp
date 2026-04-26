@@ -82,6 +82,7 @@ GAL::GAL( GAL_DISPLAY_OPTIONS& aDisplayOptions ) :
     SetCursorColor( COLOR4D( 1.0, 1.0, 1.0, 1.0 ) );
     m_crossHairMode = CROSS_HAIR_MODE::SMALL_CROSS;
     m_forceDisplayCursor = false;
+    m_hideNativeCursor = false;
     SetCursorEnabled( false );
 
     // Initialize the native widget to an arrow cursor
@@ -140,6 +141,20 @@ bool GAL::updatedGalDisplayOptions( const GAL_DISPLAY_OPTIONS& aOptions )
     if( m_options.m_forceDisplayCursor != m_forceDisplayCursor )
     {
         m_forceDisplayCursor = m_options.m_forceDisplayCursor;
+        refresh = true;
+    }
+
+    if( m_options.m_hideNativeCursor != m_hideNativeCursor )
+    {
+        m_hideNativeCursor = m_options.m_hideNativeCursor;
+
+        // Force the backend to re-apply the OS cursor so it picks up wxCURSOR_BLANK
+        // (or restores the real KICURSOR). The base SetNativeCursorStyle short-circuits
+        // when the requested KICURSOR is unchanged, so first reset to the init sentinel.
+        KICURSOR cur = m_currentNativeCursor;
+        m_currentNativeCursor = KICURSOR::DEFAULT;
+        SetNativeCursorStyle( cur, false );
+
         refresh = true;
     }
 

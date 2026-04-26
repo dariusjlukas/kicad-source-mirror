@@ -41,6 +41,7 @@
 #include <gal/opengl/opengl_compositor.h>
 #include <gal/hidpi_gl_canvas.h>
 
+#include <map>
 #include <unordered_map>
 #include <memory>
 #include <wx/event.h>
@@ -346,6 +347,23 @@ private:
     wxEvtHandler*           m_paintListener;
 
     static GLuint           g_fontTexture;      ///< Bitmap font texture handle (shared)
+
+    /// Cursor icon uploaded as a GL texture for in-canvas rendering when the
+    /// OS pointer is hidden. Shared across all GAL instances; cleaned up with
+    /// the last instance alongside g_fontTexture.
+    struct CURSOR_TEXTURE
+    {
+        GLuint id;
+        int    width;
+        int    height;
+        int    hotspotX;
+        int    hotspotY;
+    };
+
+    static std::map<KICURSOR, CURSOR_TEXTURE> g_cursorTextures;
+
+    /// Lazily upload the icon for the given cursor; nullptr if no artwork exists.
+    const CURSOR_TEXTURE* getCursorTexture( KICURSOR aCursor );
 
     // Vertex buffer objects related fields
     typedef std::unordered_map< unsigned int, std::shared_ptr<VERTEX_ITEM> > GROUPS_MAP;

@@ -73,6 +73,7 @@ void GAL_DISPLAY_OPTIONS_IMPL::ReadWindowSettings( WINDOW_SETTINGS& aCfg )
 
     m_crossHairMode = aCfg.cursor.cross_hair_mode;
     m_forceDisplayCursor = aCfg.cursor.always_show_cursor;
+    m_hideNativeCursor = aCfg.cursor.hide_os_cursor;
 
     NotifyChanged();
 }
@@ -114,6 +115,7 @@ void GAL_DISPLAY_OPTIONS_IMPL::WriteConfig( WINDOW_SETTINGS& aCfg )
     aCfg.grid.axes_enabled = m_axesEnabled;
     aCfg.cursor.cross_hair_mode = m_crossHairMode;
     aCfg.cursor.always_show_cursor = m_forceDisplayCursor;
+    aCfg.cursor.hide_os_cursor = m_hideNativeCursor;
 }
 
 

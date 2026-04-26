@@ -114,6 +114,11 @@ PANEL_GAL_OPTIONS_BASE::PANEL_GAL_OPTIONS_BASE( wxWindow* parent, wxWindowID id,
 	m_forceCursorDisplay = new wxCheckBox( this, wxID_ANY, _("Always show crosshairs"), wxDefaultPosition, wxDefaultSize, 0 );
 	fgSizer1->Add( m_forceCursorDisplay, 0, wxLEFT, 5 );
 
+	m_hideOSCursor = new wxCheckBox( this, wxID_ANY, _("Hide system cursor on canvas"), wxDefaultPosition, wxDefaultSize, 0 );
+	m_hideOSCursor->SetToolTip( _("When enabled, the OS pointer is hidden over the canvas; the in-canvas crosshair (and tool icon) act as the pointer.") );
+
+	fgSizer1->Add( m_hideOSCursor, 0, wxLEFT, 5 );
+
 
 	mainSizer->Add( fgSizer1, 1, wxEXPAND|wxTOP|wxRIGHT|wxLEFT, 5 );
 

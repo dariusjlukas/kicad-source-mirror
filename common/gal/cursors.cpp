@@ -434,6 +434,57 @@ const WX_CURSOR_TYPE CURSOR_STORE::GetCursor( KICURSOR aCursorType, bool aHiDPI 
 }
 
 /* static */
+wxImage CURSOR_STORE::GetCursorImage( KICURSOR aCursorType )
+{
+    auto it = cursors_defs.find( aCursorType );
+
+    if( it == cursors_defs.end() || it->second.empty() )
+        return wxImage();
+
+    const CURSOR_DEF& def = it->second[0];
+    wxCHECK( def.m_xpm, wxImage() );
+
+    wxImage img( def.m_xpm );
+    img.SetOption( wxIMAGE_OPTION_CUR_HOTSPOT_X, def.m_hotspot.x );
+    img.SetOption( wxIMAGE_OPTION_CUR_HOTSPOT_Y, def.m_hotspot.y );
+    return img;
+}
+
+
+/* static */
+WX_CURSOR_TYPE CURSOR_STORE::GetBlankCursor()
+{
+    // Build the blank cursor from an explicit fully-transparent bitmap rather than
+    // relying on wxCURSOR_BLANK. The stock blank cursor is unreliable on some GTK
+    // builds — it's reported as supported but in practice draws as a small dot or
+    // falls through to the parent cursor, defeating the OS-cursor-hidden mode.
+    auto buildBlankImage = []
+    {
+        wxImage img( 16, 16 );
+        img.InitAlpha();
+
+        for( int y = 0; y < 16; ++y )
+            for( int x = 0; x < 16; ++x )
+                img.SetAlpha( x, y, 0 );
+
+        img.SetOption( wxIMAGE_OPTION_CUR_HOTSPOT_X, 0 );
+        img.SetOption( wxIMAGE_OPTION_CUR_HOTSPOT_Y, 0 );
+        return img;
+    };
+
+#if wxCHECK_VERSION( 3, 3, 0 )
+    static const wxCursorBundle blank =
+            wxCursorBundle( wxBitmapBundle::FromBitmap( wxBitmap( buildBlankImage() ) ),
+                            wxPoint( 0, 0 ) );
+    return blank;
+#else
+    static const wxCursor blank( buildBlankImage() );
+    return blank;
+#endif
+}
+
+
+/* static */
 wxStockCursor CURSOR_STORE::GetStockCursor( KICURSOR aCursorType )
 {
     wxStockCursor stockCursor;

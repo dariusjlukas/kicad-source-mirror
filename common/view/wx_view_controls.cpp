@@ -411,6 +411,12 @@ void WX_VIEW_CONTROLS::onMotion( wxMouseEvent& aEvent )
     else
         m_updateCursor = true;
 
+    // When the OS pointer is suppressed in favor of the in-canvas indicator,
+    // every raw motion event must trigger a repaint — otherwise the icon only
+    // moves when the snapped cursor crosses a grid point.
+    if( m_view->GetGAL()->IsNativeCursorHidden() )
+        m_parentPanel->Refresh();
+
     aEvent.Skip();
 }
 

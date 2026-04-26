@@ -93,6 +93,20 @@ namespace KIPLATFORM
         bool IsStockCursorOk( wxStockCursor aCursor );
 
         /**
+         * Force the native pointer over the given window to be invisible by setting the
+         * underlying platform cursor to a true blank (e.g. GDK_BLANK_CURSOR on GTK).
+         *
+         * Needed because applying a transparent wxCursor via wxWindow::SetCursor() and the
+         * wxEVT_SET_CURSOR handler is not always honored — some tool-driven cursor changes
+         * (e.g. wxCURSOR_SIZING set when hovering over a draggable item) bypass that path
+         * and re-show the native cursor. Calling this after each cursor change keeps the
+         * native cursor suppressed regardless of how wx applied it.
+         *
+         * On platforms without this issue (currently a no-op outside GTK).
+         */
+        void ForceCursorBlank( wxWindow* aWindow );
+
+        /**
          * Configure a wxChoice control to support a lot of entries by disabling functionality that makes
          * adding new items become very expensive.
          *

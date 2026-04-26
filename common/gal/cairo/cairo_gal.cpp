@@ -35,6 +35,7 @@
 #include <gal/cairo/cairo_compositor.h>
 #include <gal/definitions.h>
 #include <geometry/shape_poly_set.h>
+#include <kiplatform/ui.h>
 #include <math/vector2wx.h>
 #include <math/util.h> // for KiROUND
 #include <trigo.h>
@@ -1233,6 +1234,62 @@ void CAIRO_GAL_BASE::blitCursor( wxMemoryDC& clientDC )
         clientDC.DrawLine( p.x - cursorSize / 2, p.y, p.x + cursorSize / 2, p.y );
         clientDC.DrawLine( p.x, p.y - cursorSize / 2, p.x, p.y + cursorSize / 2 );
     }
+
+    // Render the in-canvas pointer indicator when the OS cursor is suppressed.
+    // Two layers: a small marker dot at the raw (unsnapped) mouse position so the
+    // pointer is visible even for tools without artwork (ARROW), and the tool icon
+    // (LINE_WIRE etc.) at the same position with hotspot alignment when KiCad has
+    // artwork for it. Mirrors the OpenGL backend.
+    if( m_hideNativeCursor )
+    {
+        VECTOR2D mp = ToScreen( m_mousePosition );
+
+        clientDC.SetPen( wxPen( color, 2 ) );
+
+        const int armOuter = 12;
+        const int armInner = 3;
+        clientDC.DrawLine( mp.x - armOuter, mp.y, mp.x - armInner, mp.y );
+        clientDC.DrawLine( mp.x + armInner, mp.y, mp.x + armOuter, mp.y );
+        clientDC.DrawLine( mp.x, mp.y - armOuter, mp.x, mp.y - armInner );
+        clientDC.DrawLine( mp.x, mp.y + armInner, mp.x, mp.y + armOuter );
+
+        if( m_currentNativeCursor != KICURSOR::ARROW
+            && m_currentNativeCursor != KICURSOR::DEFAULT )
+        {
+            // Lazy bitmap cache — XPM → wxBitmap conversion is cheap but not free.
+            static std::map<KICURSOR, wxBitmap> bitmapCache;
+            static std::map<KICURSOR, wxPoint>  hotspotCache;
+
+            auto it = bitmapCache.find( m_currentNativeCursor );
+
+            if( it == bitmapCache.end() )
+            {
+                wxImage img = CURSOR_STORE::GetCursorImage( m_currentNativeCursor );
+
+                if( img.IsOk() )
+                {
+                    wxPoint hotspot( img.GetOptionInt( wxIMAGE_OPTION_CUR_HOTSPOT_X ),
+                                     img.GetOptionInt( wxIMAGE_OPTION_CUR_HOTSPOT_Y ) );
+
+                    bitmapCache.emplace( m_currentNativeCursor, wxBitmap( img ) );
+                    hotspotCache.emplace( m_currentNativeCursor, hotspot );
+                }
+                else
+                {
+                    bitmapCache.emplace( m_currentNativeCursor, wxBitmap() );
+                    hotspotCache.emplace( m_currentNativeCursor, wxPoint( 0, 0 ) );
+                }
+
+                it = bitmapCache.find( m_currentNativeCursor );
+            }
+
+            if( it->second.IsOk() )
+            {
+                const wxPoint& hot = hotspotCache[m_currentNativeCursor];
+                clientDC.DrawBitmap( it->second, mp.x - hot.x, mp.y - hot.y, true );
+            }
+        }
+    }
 }
 
 
@@ -1731,13 +1788,17 @@ bool CAIRO_GAL::SetNativeCursorStyle( KICURSOR aCursor, bool aHiDPI )
     if( !GAL::SetNativeCursorStyle( aCursor, aHiDPI ) )
         return false;
 
-    m_currentwxCursor = CURSOR_STORE::GetCursor( m_currentNativeCursor, aHiDPI );
+    m_currentwxCursor = m_hideNativeCursor ? CURSOR_STORE::GetBlankCursor()
+                                           : CURSOR_STORE::GetCursor( m_currentNativeCursor, aHiDPI );
 
 #if wxCHECK_VERSION( 3, 3, 0 )
     wxWindow::SetCursorBundle( m_currentwxCursor );
 #else
     wxWindow::SetCursor( m_currentwxCursor );
 #endif
+
+    if( m_hideNativeCursor )
+        KIPLATFORM::UI::ForceCursorBlank( this );
 
     return true;
 }
@@ -1750,6 +1811,9 @@ void CAIRO_GAL::onSetNativeCursor( wxSetCursorEvent& aEvent )
 #else
     aEvent.SetCursor( m_currentwxCursor );
 #endif
+
+    if( m_hideNativeCursor )
+        KIPLATFORM::UI::ForceCursorBlank( this );
 }
 
 

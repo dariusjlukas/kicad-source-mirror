@@ -55,6 +55,7 @@ class PANEL_GAL_OPTIONS_BASE : public wxPanel
 		wxRadioButton* m_rbFullWindowCrosshairs;
 		wxRadioButton* m_rb45DegreeCrosshairs;
 		wxCheckBox* m_forceCursorDisplay;
+		wxCheckBox* m_hideOSCursor;
 
 	public:
 

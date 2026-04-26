@@ -41,6 +41,7 @@
 #include <bezier_curves.h>
 #include <math/util.h> // for KiROUND
 #include <pgm_base.h>
+#include <kiplatform/ui.h>
 #include <trace_helpers.h>
 
 #include <wx/app.h>
@@ -87,6 +88,7 @@ wxGLContext* OPENGL_GAL::m_glMainContext = nullptr;
 int          OPENGL_GAL::m_instanceCounter = 0;
 GLuint       OPENGL_GAL::g_fontTexture = 0;
 bool         OPENGL_GAL::m_isBitmapFontLoaded = false;
+std::map<KICURSOR, OPENGL_GAL::CURSOR_TEXTURE> OPENGL_GAL::g_cursorTextures;
 
 namespace KIGFX
 {
@@ -468,6 +470,11 @@ OPENGL_GAL::~OPENGL_GAL()
                 glDeleteTextures( 1, &g_fontTexture );
                 m_isBitmapFontLoaded = false;
             }
+
+            for( const auto& [cursor, tex] : g_cursorTextures )
+                glDeleteTextures( 1, &tex.id );
+
+            g_cursorTextures.clear();
 
             gl_mgr->UnlockCtx( m_glMainContext );
             gl_mgr->DestroyCtx( m_glMainContext );
@@ -2246,13 +2253,20 @@ bool OPENGL_GAL::SetNativeCursorStyle( KICURSOR aCursor, bool aHiDPI )
     if( !GAL::SetNativeCursorStyle( aCursor, aHiDPI ) )
         return false;
 
-    m_currentwxCursor = CURSOR_STORE::GetCursor( m_currentNativeCursor, aHiDPI );
+    m_currentwxCursor = m_hideNativeCursor ? CURSOR_STORE::GetBlankCursor()
+                                           : CURSOR_STORE::GetCursor( m_currentNativeCursor, aHiDPI );
 
 #if wxCHECK_VERSION( 3, 3, 0 )
     wxWindow::SetCursorBundle( m_currentwxCursor );
 #else
     wxWindow::SetCursor( m_currentwxCursor );
 #endif
+
+    // wx setting the wxCursor isn't always honored on GTK for tool-driven cursor
+    // changes — the platform cursor (e.g. SIZING) leaks through despite our blank
+    // wxCursor. Force the underlying GdkWindow cursor to GDK_BLANK_CURSOR directly.
+    if( m_hideNativeCursor )
+        KIPLATFORM::UI::ForceCursorBlank( this );
 
     return true;
 }
@@ -2265,6 +2279,9 @@ void OPENGL_GAL::onSetNativeCursor( wxSetCursorEvent& aEvent )
 #else
     aEvent.SetCursor( m_currentwxCursor );
 #endif
+
+    if( m_hideNativeCursor )
+        KIPLATFORM::UI::ForceCursorBlank( this );
 }
 
 
@@ -2728,6 +2745,64 @@ void OPENGL_GAL::skipGestureEvent( wxGestureEvent& aEvent )
 }
 
 
+const OPENGL_GAL::CURSOR_TEXTURE* OPENGL_GAL::getCursorTexture( KICURSOR aCursor )
+{
+    if( auto it = g_cursorTextures.find( aCursor ); it != g_cursorTextures.end() )
+        return it->second.id ? &it->second : nullptr;
+
+    wxImage img = CURSOR_STORE::GetCursorImage( aCursor );
+
+    // No KiCad-supplied artwork (e.g. ARROW maps to a wxStockCursor). Cache the miss
+    // so we don't re-attempt every frame.
+    if( !img.IsOk() )
+    {
+        g_cursorTextures.emplace( aCursor, CURSOR_TEXTURE{ 0, 0, 0, 0, 0 } );
+        return nullptr;
+    }
+
+    // XPMs use a transparency keyword that wxImage exposes as a mask. Promote it to
+    // a real alpha channel so we can upload an RGBA texture.
+    if( img.HasMask() && !img.HasAlpha() )
+        img.InitAlpha();
+
+    const int w = img.GetWidth();
+    const int h = img.GetHeight();
+    const unsigned char* rgb = img.GetData();
+    const unsigned char* alpha = img.HasAlpha() ? img.GetAlpha() : nullptr;
+
+    std::vector<unsigned char> rgba( w * h * 4 );
+
+    for( int i = 0; i < w * h; ++i )
+    {
+        rgba[i * 4 + 0] = rgb[i * 3 + 0];
+        rgba[i * 4 + 1] = rgb[i * 3 + 1];
+        rgba[i * 4 + 2] = rgb[i * 3 + 2];
+        rgba[i * 4 + 3] = alpha ? alpha[i] : 255;
+    }
+
+    GLuint texId = 0;
+    glGenTextures( 1, &texId );
+    glBindTexture( GL_TEXTURE_2D, texId );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+    glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                  rgba.data() );
+
+    CURSOR_TEXTURE tex{
+        texId,
+        w,
+        h,
+        img.GetOptionInt( wxIMAGE_OPTION_CUR_HOTSPOT_X ),
+        img.GetOptionInt( wxIMAGE_OPTION_CUR_HOTSPOT_Y )
+    };
+
+    auto [it, _] = g_cursorTextures.emplace( aCursor, tex );
+    return &it->second;
+}
+
+
 void OPENGL_GAL::blitCursor()
 {
     if( !IsCursorEnabled() )
@@ -2812,6 +2887,84 @@ void OPENGL_GAL::blitCursor()
     glEnd();
 
     glPopMatrix();
+
+    // When the OS pointer is suppressed, render an in-canvas indicator at the raw
+    // (unsnapped) mouse position so the user can see where their pointer actually
+    // is — distinct from the snapped crosshair, which shows the snap target.
+    //
+    // Two layers: a small marker dot (always shown so the pointer is visible even
+    // for tools without custom artwork like ARROW), and the tool icon (LINE_WIRE,
+    // COMPONENT, ZOOM_IN, etc.) if KiCad has artwork for it. The icon's hotspot
+    // pixel is placed exactly at the mouse position, mirroring how the OS would
+    // draw the real wxCursor.
+    if( m_hideNativeCursor )
+    {
+        // Draw in screen-pixel coordinates: switch MODELVIEW to identity so vertices
+        // are interpreted directly by the screen-space ortho PROJECTION set up in
+        // BeginDrawing(). The previous world-coords MODELVIEW is restored after.
+        glMatrixMode( GL_MODELVIEW );
+        glPushMatrix();
+        glLoadIdentity();
+
+        // Find the mouse in screen pixels by transforming through the world->screen
+        // matrix. m_mousePosition is fed in by EDA_DRAW_PANEL_GAL each repaint.
+        VECTOR2D screenMouse = m_worldScreenMatrix * m_mousePosition;
+
+        // Crosshair marking the actual pointer position — the snapped crosshair
+        // shows the snap target, this one shows where the mouse is. The arms have
+        // a small gap at the center so the hotspot pixel stays readable.
+        glDisable( GL_TEXTURE_2D );
+        glColor4d( color.r, color.g, color.b, color.a );
+        glLineWidth( 2.0 );
+
+        const double armOuter = 12.0;
+        const double armInner = 3.0;
+
+        glBegin( GL_LINES );
+        // Horizontal arms
+        glVertex2d( screenMouse.x - armOuter, screenMouse.y );
+        glVertex2d( screenMouse.x - armInner, screenMouse.y );
+        glVertex2d( screenMouse.x + armInner, screenMouse.y );
+        glVertex2d( screenMouse.x + armOuter, screenMouse.y );
+        // Vertical arms
+        glVertex2d( screenMouse.x, screenMouse.y - armOuter );
+        glVertex2d( screenMouse.x, screenMouse.y - armInner );
+        glVertex2d( screenMouse.x, screenMouse.y + armInner );
+        glVertex2d( screenMouse.x, screenMouse.y + armOuter );
+        glEnd();
+
+        glLineWidth( 1.0 );
+
+        // Tool icon — only when artwork exists (ARROW/DEFAULT have none and we just
+        // leave the dot, which is the right thing visually).
+        if( m_currentNativeCursor != KICURSOR::ARROW
+            && m_currentNativeCursor != KICURSOR::DEFAULT )
+        {
+            if( const CURSOR_TEXTURE* tex = getCursorTexture( m_currentNativeCursor ) )
+            {
+                const double x0 = screenMouse.x - tex->hotspotX;
+                const double y0 = screenMouse.y - tex->hotspotY;
+                const double x1 = x0 + tex->width;
+                const double y1 = y0 + tex->height;
+
+                glEnable( GL_TEXTURE_2D );
+                glBindTexture( GL_TEXTURE_2D, tex->id );
+                glColor4d( 1.0, 1.0, 1.0, 1.0 );
+
+                glBegin( GL_QUADS );
+                glTexCoord2d( 0.0, 0.0 ); glVertex2d( x0, y0 );
+                glTexCoord2d( 1.0, 0.0 ); glVertex2d( x1, y0 );
+                glTexCoord2d( 1.0, 1.0 ); glVertex2d( x1, y1 );
+                glTexCoord2d( 0.0, 1.0 ); glVertex2d( x0, y1 );
+                glEnd();
+
+                glBindTexture( GL_TEXTURE_2D, 0 );
+                glDisable( GL_TEXTURE_2D );
+            }
+        }
+
+        glPopMatrix();
+    }
 
     if( depthTestEnabled )
         glEnable( GL_DEPTH_TEST );

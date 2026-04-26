@@ -101,6 +101,12 @@ void KIPLATFORM::UI::FixupCancelButtonCmdKeyCollision( wxWindow *aWindow )
 }
 
 
+void KIPLATFORM::UI::ForceCursorBlank( wxWindow* )
+{
+    // Not needed: wxCursor( wxCURSOR_BLANK ) reliably hides the OS cursor on Win32.
+}
+
+
 bool KIPLATFORM::UI::IsStockCursorOk( wxStockCursor aCursor )
 {
     switch( aCursor )

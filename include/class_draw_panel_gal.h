@@ -291,6 +291,11 @@ protected:
     /// Last cursor position sent to GAL for drawing
     VECTOR2D                 m_lastCursorPosition;
 
+    /// Last raw (unsnapped) mouse position sent to GAL. Tracked so we can
+    /// avoid skipping repaints between grid points when the in-canvas
+    /// pointer indicator is active.
+    VECTOR2D                 m_lastMousePosition;
+
     /// Interface for drawing objects on a 2D-surface
     KIGFX::GAL*              m_gal;
 

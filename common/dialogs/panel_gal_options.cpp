@@ -101,6 +101,7 @@ bool PANEL_GAL_OPTIONS::TransferDataToWindow()
         m_rbFullWindowCrosshairs->SetValue( true );
 
     m_forceCursorDisplay->SetValue( m_cfg->m_Window.cursor.always_show_cursor );
+    m_hideOSCursor->SetValue( m_cfg->m_Window.cursor.hide_os_cursor );
 
     return true;
 }
@@ -129,6 +130,7 @@ bool PANEL_GAL_OPTIONS::TransferDataFromWindow()
     else
         m_cfg->m_Window.cursor.cross_hair_mode = KIGFX::CROSS_HAIR_MODE::SMALL_CROSS;
     m_cfg->m_Window.cursor.always_show_cursor = m_forceCursorDisplay->GetValue();
+    m_cfg->m_Window.cursor.hide_os_cursor = m_hideOSCursor->GetValue();
 
     return true;
 }

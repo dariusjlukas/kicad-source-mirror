@@ -134,6 +134,23 @@ public:
      */
     static wxStockCursor GetStockCursor( KICURSOR aCursorType );
 
+    /**
+     * @return a fully-transparent cursor (wxCURSOR_BLANK) wrapped in WX_CURSOR_TYPE.
+     * Used when the OS pointer is suppressed in favor of an in-canvas indicator.
+     */
+    static WX_CURSOR_TYPE GetBlankCursor();
+
+    /**
+     * Get the underlying icon image for the given cursor, suitable for in-canvas
+     * rendering by the GAL. Returns the standard-DPI variant for cursors that have
+     * a custom XPM, and an empty image (`!IsOk()`) for stock cursors that have no
+     * KiCad-supplied artwork (e.g. ARROW, MOVING when mapped to a wxStockCursor).
+     *
+     * The returned image carries the original hotspot in the wxIMAGE_OPTION_CUR_HOTSPOT_*
+     * options so callers can offset it correctly relative to the pointer position.
+     */
+    static wxImage GetCursorImage( KICURSOR aCursorType );
+
 private:
     /**
      * Construct a store with cursors for all defined types.

@@ -50,6 +50,10 @@ struct KICOMMON_API CURSOR_SETTINGS
 {
     bool always_show_cursor;
     KIGFX::CROSS_HAIR_MODE cross_hair_mode;
+
+    /// Suppress the OS pointer over the canvas; tool feedback is rendered in-canvas instead.
+    /// Implies always_show_cursor (otherwise the user would lose the pointer entirely).
+    bool hide_os_cursor;
 };
 
 /**

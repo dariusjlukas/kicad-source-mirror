@@ -1002,7 +1002,15 @@ public:
      */
     bool IsCursorEnabled() const
     {
-        return m_isCursorEnabled || m_forceDisplayCursor;
+        return m_isCursorEnabled || m_forceDisplayCursor || m_hideNativeCursor;
+    }
+
+    /**
+     * @return true if the OS pointer is being suppressed in favor of the in-canvas crosshair.
+     */
+    bool IsNativeCursorHidden() const
+    {
+        return m_hideNativeCursor;
     }
 
     /**
@@ -1021,6 +1029,20 @@ public:
      * @param aCursorPosition is the cursor position in screen coordinates.
      */
     virtual void DrawCursor( const VECTOR2D& aCursorPosition ) {};
+
+    /**
+     * Update the raw, unsnapped mouse position used by the in-canvas pointer
+     * indicator. Called by the canvas each repaint so the indicator can track
+     * the actual mouse rather than the snapped crosshair.
+     *
+     * @param aMousePosition is the world-coordinate mouse position.
+     */
+    void SetMousePosition( const VECTOR2D& aMousePosition )
+    {
+        m_mousePosition = aMousePosition;
+    }
+
+    const VECTOR2D& GetMousePosition() const { return m_mousePosition; }
 
     virtual void EnableDepthTest( bool aEnabled = false ) {};
 
@@ -1174,11 +1196,21 @@ protected:
     // Cursor settings
     bool                 m_isCursorEnabled;    ///< Is the cursor enabled?
     bool                 m_forceDisplayCursor; ///< Always show cursor
+    bool                 m_hideNativeCursor;   ///< Suppress the OS pointer; use the
+                                               ///< in-canvas crosshair as the only pointer
     COLOR4D              m_cursorColor;        ///< Cursor color
     KIGFX::CROSS_HAIR_MODE m_crossHairMode;    ///< Crosshair drawing mode
     VECTOR2D             m_cursorPosition;     ///< Current cursor position (world coordinates)
 
     KICURSOR             m_currentNativeCursor; ///< Current cursor
+
+    VECTOR2D             m_mousePosition;       ///< Raw (unsnapped) mouse position in
+                                                ///< world coordinates. Tracked for the
+                                                ///< in-canvas pointer indicator that
+                                                ///< stands in for the suppressed OS
+                                                ///< cursor — distinct from
+                                                ///< m_cursorPosition, which snaps to
+                                                ///< grid.
 
 private:
 
