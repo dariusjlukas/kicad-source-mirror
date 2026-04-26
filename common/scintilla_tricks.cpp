@@ -130,6 +130,22 @@ void SCINTILLA_TRICKS::setupStyles()
 
         m_te->SetTabWidth( 4 );
     }
+#ifdef __WXGTK__
+    else
+    {
+        // Single-line Scintilla controls on GTK need an explicit font: with the default,
+        // Scintilla's per-character measurement diverges from Pango's text-rendering pipeline
+        // under fractional HiDPI scaling, so the caret X position drifts left of typed text
+        // and selected glyphs shimmer left/right during selection drag.  Monospace fonts mask
+        // the divergence (every glyph has identical width); proportional fonts fix the caret
+        // but not the shimmer, so monospace it is until the upstream wx/Scintilla measurement
+        // path is fixed.
+        wxFont fixedFont = KIUI::GetMonospacedUIFont();
+
+        for( size_t i = 0; i < wxSTC_STYLE_MAX; ++i )
+            m_te->StyleSetFont( i, fixedFont );
+    }
+#endif
 
     // Set up the brace highlighting.  Scintilla doesn't handle alpha, so we construct our own
     // 20% wash by blending with the background.
